@@ -24,7 +24,7 @@ class Chef
       
       option :all, :short => '-a', :long => '--all', :boolean => true, :description => 'delete all versions'
 
-      banner "Sub-Command: cookbook delete COOKBOOK VERSION (options)"
+      banner "knife cookbook delete COOKBOOK VERSION (options)"
 
       def run
         @cookbook_name, @version = name_args

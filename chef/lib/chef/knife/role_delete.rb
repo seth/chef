@@ -24,7 +24,7 @@ class Chef
   class Knife
     class RoleDelete < Knife
 
-      banner "Sub-Command: role delete ROLE (options)"
+      banner "knife role delete ROLE (options)"
 
       def run 
         delete_object(Chef::Role, @name_args[0])

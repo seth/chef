@@ -35,7 +35,7 @@ class Chef
         :description => "Create the client as an admin",
         :boolean => true
 
-      banner "Sub-Command: client create CLIENT (options)"
+      banner "knife client create CLIENT (options)"
 
       def run 
         client = Chef::ApiClient.new

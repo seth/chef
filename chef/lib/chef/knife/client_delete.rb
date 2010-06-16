@@ -24,7 +24,7 @@ class Chef
   class Knife
     class ClientDelete < Knife
 
-      banner "Sub-Command: client delete CLIENT (options)"
+      banner "knife client delete CLIENT (options)"
 
       def run 
         delete_object(Chef::ApiClient, @name_args[0])

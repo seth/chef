@@ -24,7 +24,7 @@ class Chef
   class Knife
     class CookbookBulkDelete < Knife
 
-      banner "Sub-Command: cookbook bulk delete REGEX (options)"
+      banner "knife cookbook bulk delete REGEX (options)"
 
       def run
         unless regex_str = @name_args.first
