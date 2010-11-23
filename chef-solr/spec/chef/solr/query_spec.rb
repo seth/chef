@@ -5,10 +5,15 @@ describe Chef::Solr::Query do
     @query = Chef::Solr::Query.new
   end
 
-  it "should transform queries correctly" do
-    testcases = Hash[*(File.readlines("#{CHEF_SOLR_SPEC_DATA}/search_queries_to_transform.txt").select{|line| line !~ /^\s*$/}.map{|line| line.chomp})]
+  describe "transform queries correctly" do
+    testcase_file = "#{CHEF_SOLR_SPEC_DATA}/search_queries_to_transform.txt"
+    lines = File.readlines(testcase_file).map { |line| line.strip }
+    lines = lines.select { |line| !line.empty? }
+    testcases = Hash[*(lines)]
     testcases.each do |input, expected|
-      @query.transform_search_query(input).should == expected
+      it "from> #{input}\n    to> #{expected}\n" do
+        @query.transform_search_query(input).should == expected
+      end
     end
   end
 
