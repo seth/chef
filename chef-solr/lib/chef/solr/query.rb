@@ -27,6 +27,7 @@ require 'chef/data_bag_item'
 require 'chef/solr'
 require 'chef/log'
 require 'chef/config'
+require 'chef/solr/query_transform'
 
 class Chef
   class Solr
@@ -103,6 +104,10 @@ class Chef
       QUO_KEY = "\004"
 
       def transform_search_query(q)
+        Chef::Solr::QueryTransform.transform(q)
+      end
+      
+      def transform_search_query_orig(q)
         return q if q == "*:*"
 
         # handled escaped quotes
