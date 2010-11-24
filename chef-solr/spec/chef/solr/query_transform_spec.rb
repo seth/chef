@@ -190,6 +190,10 @@ describe "Chef::Solr::QueryTransform" do
       @parser.parse("afield:aterm").should == "((F:afield T:aterm))"
     end
 
+    it "allows underscore in a field name" do
+      @parser.parse("a_field:aterm").should == "((F:a_field T:aterm))"
+    end
+
     it "parses a group annotated with a field" do
       @parser.parse("afield:(a b c)").should == "((F:afield (T:a T:b T:c)))"
     end
@@ -197,17 +201,70 @@ describe "Chef::Solr::QueryTransform" do
     it "parses a phrase annotated with a field" do
       @parser.parse('afield:"a b c"').should == '((F:afield STR:"a b c"))'
     end
+
+    describe "and binary operators" do
+      examples = [
+                  ['term1 AND afield:term2', "((OP:AND T:term1 ((F:afield T:term2))))"],
+                  ['afield:term1 AND term2', "((OP:AND (F:afield T:term1) (T:term2)))"],
+                  ['afield:term1 AND bfield:term2',
+                   "((OP:AND (F:afield T:term1) ((F:bfield T:term2))))"]]
+      examples.each do |input, want|
+        it "'#{input}' => '#{want}'" do
+          @parser.parse(input).should == want
+        end
+      end
+    end
   end
 
   describe "range queries" do
-    it "parses an inclusive range query" do
-      expect = "((FR:afield [start] [end]))"
-      @parser.parse("afield:[start TO end]").should == expect
+    before(:each) do
+      @kinds = {
+        "inclusive" => {:left => "[", :right => "]"},
+        "exclusive" => {:left => "{", :right => "}"}
+      }
+    end
+    
+    def make_expect(kind, field, s, e)
+      expect_fmt = "((FR:%s %s%s%s %s%s%s))"
+      left = @kinds[kind][:left]
+      right = @kinds[kind][:right]
+      expect_fmt % [field, left, s, right, left, e, right]
     end
 
-    it "parses an exclusive range query" do
-      expect = "((FR:afield {start} {end}))"
-      @parser.parse("afield:{start TO end}").should == expect
+    def make_query(kind, field, s, e)
+      query_fmt = "%s:%s%s TO %s%s"
+      left = @kinds[kind][:left]
+      right = @kinds[kind][:right]
+      query_fmt % [field, left, s, e, right]
+    end
+
+    ["inclusive", "exclusive"].each do |kind|
+      tests = [["afield", "start", "end"],
+               ["afield", "start", "*"],
+               ["afield", "*", "end"],
+               ["afield", "*", "*"]
+              ]
+      tests.each do |field, s, e|
+        it "parses an #{kind} range query #{s} TO #{e}" do
+          expect = make_expect(kind, field, s, e)
+          query = make_query(kind, field, s, e)
+          @parser.parse(query).should == expect
+        end
+      end
+    end
+
+    describe "and binary operators" do
+      [["afield:[start TO end] AND term",
+        "((OP:AND (FR:afield [start] [end]) (T:term)))"],
+       ["term OR afield:[start TO end]",
+        "((OP:OR T:term ((FR:afield [start] [end]))))"],
+       ["f1:[s1 TO e1] OR f2:[s2 TO e2]",
+        "((OP:OR (FR:f1 [s1] [e1]) ((FR:f2 [s2] [e2]))))"]
+      ].each do |q, want|
+        it "parses '#{q}'" do
+          @parser.parse(q).should == want
+        end
+      end
     end
   end
 
@@ -239,9 +296,17 @@ describe "Chef::Solr::QueryTransform" do
   end
 
   describe "examples" do
-    ex1 = 'tags:apples*.for.eating.com'
-    it "should parse '#{ex1}'" do
-      @parser.parse(ex1).should == "((F:tags T:apples*.for.eating.com))"
+    examples = [['tags:apples*.for.eating.com', "((F:tags T:apples*.for.eating.com))"],
+                ['ohai_time:[1234.567 TO *]', "((FR:ohai_time [1234.567] [*]))"],
+                ['ohai_time:[* TO 1234.567]', "((FR:ohai_time [*] [1234.567]))"],
+                ['ohai_time:[* TO *]', "((FR:ohai_time [*] [*]))"]]
+                # ['aterm AND afield:aterm', "((OP:AND T:aterm ((F:afield T:aterm))))"],
+                # ['role:prod AND aterm', "blah"],
+                # ['role:prod AND xy:true', "blah"]]
+    examples.each do |input, want|
+      it "'#{input}' => '#{want}'" do
+        @parser.parse(input).should == want
+      end
     end
   end
 end

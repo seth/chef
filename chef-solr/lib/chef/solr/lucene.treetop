@@ -43,7 +43,7 @@ grammar Lucene
   end
 
   rule binary_op
-    (group / term) space? boolean_operator space+ body <BinaryOp>
+    (group / field / field_range / term) space? boolean_operator space+ body <BinaryOp>
   end
 
   rule boolean_operator
