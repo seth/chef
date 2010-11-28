@@ -47,8 +47,7 @@ class Chef
         msg += "Reason: #{@@parser.failure_reason}"
         raise Chef::Exceptions::QueryParseError, msg if tree.nil?
         self.clean_tree(tree)
-        t = tree.transform
-        t[1...(t.size - 1)]
+        tree.transform
       end
 
       private
