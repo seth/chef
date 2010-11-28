@@ -1,3 +1,12 @@
+afield:[* TO *]
+content:afield__=__*
+
+afield:[a TO *]
+content:[afield__=__a TO afield__=__\ufff0]
+
+afield:[* TO b]
+content:[afield__=__ TO afield__=__b]
+
 *:*
 *:*
 

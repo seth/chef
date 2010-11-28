@@ -41,7 +41,15 @@ module Lucene
       range_start = self.elements[1].transform
       range_end = self.elements[2].transform
       # FIXME: handle special cases for missing start/end
-      "content:#{left}#{field}#{SEP}#{range_start} TO #{field}#{SEP}#{range_end}#{right}"
+      if ("*" == range_start && "*" == range_end)
+        "content:#{field}#{SEP}*"
+      elsif "*" == range_end
+        "content:#{left}#{field}#{SEP}#{range_start} TO #{field}#{SEP}\\ufff0#{right}"
+      elsif "*" == range_start
+        "content:#{left}#{field}#{SEP} TO #{field}#{SEP}#{range_end}#{right}"
+      else
+        "content:#{left}#{field}#{SEP}#{range_start} TO #{field}#{SEP}#{range_end}#{right}"
+      end
     end
 
   end

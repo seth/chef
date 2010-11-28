@@ -59,9 +59,9 @@ grammar Lucene
   end
 
   rule not_op
-    not_operator space (group / term / string) <UnaryOp>
+    not_operator space (group / field / field_range / term / string) <UnaryOp>
     /
-    bang_operator space? (group / term / string) <UnaryOp>
+    bang_operator space? (group / field / field_range / term / string) <UnaryOp>
   end
 
   rule not_operator

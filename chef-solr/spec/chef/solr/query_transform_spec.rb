@@ -214,6 +214,22 @@ describe "Chef::Solr::QueryTransform" do
         end
       end
     end
+
+    describe "and unary operators" do
+      examples = [
+                  ['term1 AND NOT afield:term2',
+                   "((OP:AND T:term1 ((OP:NOT (F:afield T:term2)))))"],
+                  ['term1 AND ! afield:term2',
+                   "((OP:AND T:term1 ((OP:NOT (F:afield T:term2)))))"],
+                  ['term1 AND !afield:term2',
+                   "((OP:AND T:term1 ((OP:NOT (F:afield T:term2)))))"]
+                 ]
+      examples.each do |input, want|
+        it "#{input} => #{want}" do
+          @parser.parse(input).should == want
+        end
+      end
+    end
   end
 
   describe "range queries" do
@@ -263,6 +279,16 @@ describe "Chef::Solr::QueryTransform" do
       ].each do |q, want|
         it "parses '#{q}'" do
           @parser.parse(q).should == want
+        end
+      end
+    end
+
+    describe "and unary operators" do
+      [["t1 NOT afield:[start TO end]",
+        "(T:t1 (OP:NOT (FR:afield [start] [end])))"]
+      ].each do |input, want|
+        it "#{input} => #{want}" do
+          @parser.parse(input).should == want
         end
       end
     end
