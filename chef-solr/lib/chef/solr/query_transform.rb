@@ -42,6 +42,7 @@ class Chef
       end
 
       def self.transform(data)
+        return "*:*" if data == "*:*"
         tree = @@parser.parse(data)
         msg = "Parse error at offset: #{@@parser.index}\n"
         msg += "Reason: #{@@parser.failure_reason}"

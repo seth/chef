@@ -22,8 +22,15 @@ module Lucene
 
     def transform
       field = self.elements[0].text_value
-      term = self.elements[1].transform
-      "content:#{field}#{SEP}#{term}"
+      term = self.elements[1]
+      if term.is_a? Phrase
+        str = term.transform
+        # remove quotes
+        str = str[1 ... (str.length - 1)]
+        "content:\"#{field}#{SEP}#{str}\""
+      else
+        "content:#{field}#{SEP}#{term.transform}"
+      end
     end
   end
 
@@ -261,7 +268,7 @@ module Lucene
     end
 
     def transform
-      "\"#{self.text_value}\""
+      "#{self.text_value}"
     end
   end
 end
