@@ -1,0 +1,102 @@
+#!/usr/bin/env ruby
+
+# Author:: Seth Falcon (<seth@opscode.com>)
+# Copyright:: Copyright 2010 Opscode, Inc.
+# License:: Apache License, Version 2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# 
+#     http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+require 'rubygems'
+require 'mixlib/cli'
+require 'yaml'
+require 'json'
+$:.unshift(File.expand_path(File.join(File.dirname(__FILE__), "..", "lib")))
+require 'chef/encrypted_data_bag_item'
+
+USAGE = <<EOS
+Usage: #{$0} [options] JSON_FILE
+EOS
+
+class DataBagEncryptor
+  include Mixlib::CLI
+
+  banner(USAGE)
+
+  option :secret, 
+  :short => "-s SECRET",
+  :long  => "--secret ",
+  :description => "The secret key to use to encrypt data bag item values"
+
+  option :secret_file,
+  :short => "-f SECRET_FILE",
+  :long => "--file SECRET_FILE",
+  :description => "A file containing the secret key to use to encrypt data bag item values"
+
+  option :help,
+  :short => "-h",
+  :long => "--help",
+  :description => "Show this message",
+  :on => :tail,
+  :boolean => true,
+  :show_options => true,
+  :exit => 1
+
+  def die(msg)
+    puts msg + "\n\n"
+    puts opt_parser
+    exit(1)
+  end
+  
+  def validate_argv(params)
+    if ((!config[:secret] && !config[:secret_file]) ||
+        (config[:secret] && config[:secret_file]))
+      die "Error: please specify exactly one of --secret or --file"
+    end
+    die "Error: please specify JSON_FILE" if params.size != 1
+  end
+
+  def read_secret
+    if config[:secret]
+      config[:secret]
+    else
+      raise "file not found '#{config[:secret_file]}'" if
+        !File.exists?(config[:secret_file])
+      raise "empty secret file at '#{config[:secret_file]}'" if
+        File.size(config[:secret_file]) == 0
+      IO.read(config[:secret_file])
+    end
+  end
+
+  def run(argv=ARGV)
+    params = parse_options
+    validate_argv(params)
+    secret = read_secret
+    # we depend on argv not being modified, and knowing that
+    # a valid command has three raw args
+    json_file_name = File.expand_path(argv.last)
+    data_bag = JSON.parse(IO.read(json_file_name))
+    enc_data_bag = data_bag.inject({}) do |h, (key, val)|
+      h[key] = if key != "id"
+                 Chef::EncryptedDataBagItem.encrypt_string(val.to_yaml, secret)
+               else
+                 val
+               end
+      h
+    end
+    puts enc_data_bag.to_json
+  end
+end
+
+encryptor = DataBagEncryptor.new
+encryptor.run
+

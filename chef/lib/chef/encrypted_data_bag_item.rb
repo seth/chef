@@ -16,8 +16,8 @@
 # limitations under the License.
 #
 
+require 'openssl'
 require 'chef/data_bag_item'
-require 'encryptor'
 require 'yaml'
 
 # An EncryptedDataBagItem represents a read-only data bag item where
@@ -46,6 +46,7 @@ require 'yaml'
 #
 class Chef::EncryptedDataBagItem
   DEFAULT_SECRET_FILE = "/etc/chef/encrypted_data_bag_secret"
+  ALGORITHM = 'aes-256-cbc'
 
   def initialize(enc_hash, secret)
     @enc_hash = enc_hash
@@ -57,7 +58,8 @@ class Chef::EncryptedDataBagItem
     if key == "id"
       value
     else
-      YAML.load(Encryptor.decrypt(value, :key => @secret))
+      klass = Chef::EncryptedDataBagItem
+      YAML.load(klass.decrypt_string(value, @secret))
     end
   end
 
@@ -71,9 +73,10 @@ class Chef::EncryptedDataBagItem
   end
 
   def self.encrypt(plain_hash, secret)
+    klass = Chef::EncryptedDataBagItem
     plain_hash.inject({}) do |h, (key, val)|
       h[key] = if key != "id"
-                 Encryptor.encrypt(val.to_yaml, :key => secret)
+                 klass.encrypt_string(val.to_yaml, secret)
                else
                  val
                end
@@ -88,8 +91,15 @@ class Chef::EncryptedDataBagItem
     Chef::EncryptedDataBagItem.new(raw_hash, secret)
   end
 
+  def self.encrypt_string(string, key)
+    self.cipher(:encrypt, string, key)
+  end
 
-  private
+  def self.decrypt_string(string, key)
+    self.cipher(:decrypt, string, key)
+  end
+
+  protected
 
   def self.load_secret
     path = Chef::Config[:encrypted_data_bag_secret] || DEFAULT_SECRET_FILE
@@ -101,5 +111,14 @@ class Chef::EncryptedDataBagItem
       raise ArgumentError, "invalid zero length secret in '#{path}'"
     end
     secret
+  end
+
+  def self.cipher(direction, data, key)
+    cipher = OpenSSL::Cipher::Cipher.new(ALGORITHM)
+    cipher.send(direction)
+    cipher.pkcs5_keyivgen(key)
+    ans = cipher.update(data)
+    ans << cipher.final
+    ans
   end
 end
