@@ -85,18 +85,10 @@ class DataBagEncryptor
     # a valid command has three raw args
     json_file_name = File.expand_path(argv.last)
     data_bag = JSON.parse(IO.read(json_file_name))
-    enc_data_bag = data_bag.inject({}) do |h, (key, val)|
-      h[key] = if key != "id"
-                 Chef::EncryptedDataBagItem.encrypt_string(val.to_yaml, secret)
-               else
-                 val
-               end
-      h
-    end
-    puts enc_data_bag.to_json
+    Chef::EncryptedDataBagItem.encrypt_data_bag_item(data_bag, secret)
   end
 end
 
 encryptor = DataBagEncryptor.new
-encryptor.run
+puts encryptor.run.to_json
 

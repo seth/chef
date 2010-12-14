@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+require 'base64'
 require 'openssl'
 require 'chef/data_bag_item'
 require 'yaml'
@@ -58,8 +59,7 @@ class Chef::EncryptedDataBagItem
     if key == "id"
       value
     else
-      klass = Chef::EncryptedDataBagItem
-      YAML.load(klass.decrypt_string(value, @secret))
+      self.class.decrypt_value(value, @secret)
     end
   end
 
@@ -68,15 +68,13 @@ class Chef::EncryptedDataBagItem
   end
 
   def self.from_plain_hash(plain_hash, secret)
-    klass = Chef::EncryptedDataBagItem
-    klass.new(klass.encrypt(plain_hash, secret), secret)
+    self.new(self.encrypt_data_bag_item(plain_hash, secret), secret)
   end
 
-  def self.encrypt(plain_hash, secret)
-    klass = Chef::EncryptedDataBagItem
+  def self.encrypt_data_bag_item(plain_hash, secret)
     plain_hash.inject({}) do |h, (key, val)|
       h[key] = if key != "id"
-                 klass.encrypt_string(val.to_yaml, secret)
+                 self.encrypt_value(val, secret)
                else
                  val
                end
@@ -88,15 +86,15 @@ class Chef::EncryptedDataBagItem
     path = "data/#{data_bag}/#{name}"
     raw_hash = Chef::DataBagItem.load(data_bag, name)
     secret = secret || self.load_secret
-    Chef::EncryptedDataBagItem.new(raw_hash, secret)
+    self.new(raw_hash, secret)
   end
 
-  def self.encrypt_string(string, key)
-    self.cipher(:encrypt, string, key)
+  def self.encrypt_value(value, key)
+    Base64.encode64(self.cipher(:encrypt, value.to_yaml, key))
   end
 
-  def self.decrypt_string(string, key)
-    self.cipher(:decrypt, string, key)
+  def self.decrypt_value(value, key)
+    YAML.load(self.cipher(:decrypt, Base64.decode64(value), key))
   end
 
   protected

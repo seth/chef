@@ -27,7 +27,8 @@ describe Chef::EncryptedDataBagItem do
       "greeting" => "hello",
       "nested" => { "a1" => [1, 2, 3], "a2" => { "b1" => true }}
     }
-    @enc_data = Chef::EncryptedDataBagItem.encrypt(@plain_data, @secret)
+    @enc_data = Chef::EncryptedDataBagItem.encrypt_data_bag_item(@plain_data,
+                                                                 @secret)
   end
 
   describe "encrypting" do
@@ -54,7 +55,8 @@ describe Chef::EncryptedDataBagItem do
 
   describe "decrypting" do
     before(:each) do
-      @enc_data = Chef::EncryptedDataBagItem.encrypt(@plain_data, @secret)
+      @enc_data = Chef::EncryptedDataBagItem.encrypt_data_bag_item(@plain_data,
+                                                                   @secret)
       @eh = Chef::EncryptedDataBagItem.new(@enc_data, @secret)
     end
 
