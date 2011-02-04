@@ -212,7 +212,13 @@ module Lucene
     def transform
       op = self.elements[0].transform
       a = self.elements[1].transform
-      "#{op} #{a}"
+      spc = case op
+            when "+", "-"
+              ""
+            else
+              " "
+            end
+      "#{op}#{spc}#{a}"
     end
 
   end

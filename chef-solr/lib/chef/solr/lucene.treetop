@@ -83,9 +83,9 @@ grammar Lucene
   end
 
   rule prohibited_op
-    !valid_letter prohibited_operator (term/string) <UnaryOp>
+    !valid_letter prohibited_operator (field/field_range/term/string) <UnaryOp>
     /
-    prohibited_operator (term/string) <UnaryOp>
+    prohibited_operator (field/field_range/term/string) <UnaryOp>
   end
 
   rule prohibited_operator

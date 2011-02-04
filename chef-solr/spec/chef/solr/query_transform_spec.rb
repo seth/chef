@@ -222,7 +222,11 @@ describe "Chef::Solr::QueryTransform" do
                   ['term1 AND ! afield:term2',
                    "(OP:AND T:term1 (OP:NOT (F:afield T:term2)))"],
                   ['term1 AND !afield:term2',
-                   "(OP:AND T:term1 (OP:NOT (F:afield T:term2)))"]
+                   "(OP:AND T:term1 (OP:NOT (F:afield T:term2)))"],
+                  ['term1 AND -afield:term2',
+                   "(OP:AND T:term1 (OP:- (F:afield T:term2)))"],
+                  ['-afield:[* TO *]',
+                   "(OP:- (FR:afield [*] [*]))"]
                  ]
       examples.each do |input, want|
         it "#{input} => #{want}" do
