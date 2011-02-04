@@ -234,19 +234,6 @@ module Lucene
 
   end
 
-  class RequiredExpression < Treetop::Runtime::SyntaxNode
-    def to_array
-      a = self.elements[0].to_array
-      "(OP:+ #{a})"
-    end
-
-    def transform
-      a = self.elements[0].transform
-      "+#{a}"
-    end
-
-  end
-
   class RequiredOperator < Treetop::Runtime::SyntaxNode
     def to_array
       "OP:+"
