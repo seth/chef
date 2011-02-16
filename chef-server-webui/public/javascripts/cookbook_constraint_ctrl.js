@@ -10,9 +10,12 @@ $(document).ready(function() {
 })
 
 function jQuerySuggest(timestamp){
+  $(".ac_results").remove(); // FIXME issue w/ jquery suggest
   var cb_name = retrieveCbName(timestamp);
+  console.log("in jQuerySuggest " + cb_name);
   populateVersionBoxContent(timestamp, cb_name);
-  $("cookbook_version_" + timestamp).value = "0.0.0";
+  $("#cookbook_version_" + timestamp).value = "0.0.0";
+  $("#cookbook_version_" + timestamp).text("0.0.0");
 }
 
 function populateVersionBoxContent(timestamp, cb_name){
