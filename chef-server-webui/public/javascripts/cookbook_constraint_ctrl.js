@@ -1,3 +1,14 @@
+$(document).ready(function() {
+  if (document.getElementById('edit') != null) {
+    var versions = cookbook_versions();
+    for (var cookbook in versions){
+      var operator = versions[cookbook]["op"];
+      var version = versions[cookbook]["version"];
+      addTableRow(cookbook, operator, version);
+    }
+  }
+})
+
 function jQuerySuggest(timestamp){
   var cb_name = retrieveCbName(timestamp);
   populateVersionBoxContent(timestamp, cb_name);
@@ -12,7 +23,7 @@ function populateVersionBoxContent(timestamp, cb_name){
                                    function(item, i) {
                                      return item["version"];
                                    });
-              jQuery('#cookbook_version_'+timestamp).suggest(versions);
+              jQuery('#cookbook_version_' + timestamp).suggest(versions);
             });
 }
 
@@ -43,52 +54,120 @@ function validateVersionBoxValue(box, timestamp) {
   }, 100);
 }
 
-function buildCookbookList(cookbook_names, default_cookbook){
-  if (default_cookbook != null && $.inArray(default_cookbook, cookbook_names) < 0){
+
+function appendCookbookOptions(cookbook_names, default_cookbook, obj) {
+  if (default_cookbook != null && $.inArray(default_cookbook, cookbook_names) < 0) {
     cookbook_names.push(default_cookbook);
   }
-  var result = '<option value=""></option>';
-  for(i=0; i<cookbook_names.length; i++){
-    result += '<option value=' + '"' + cookbook_names[i] + '" ';
-    if (cookbook_names[i] == default_cookbook)
-      result += 'selected=true>' + cookbook_names[i] + '</option>';
-    else
-      result += '>' + cookbook_names[i] + '</option>';
+  obj.append($('<option/>').attr("value", "").text(""));
+  for (i = 0; i < cookbook_names.length; i++) {
+    var opt = $('<option/>')
+    opt.attr("value", cookbook_names[i]).text(cookbook_names[i]);
+    if (cookbook_names[i] == default_cookbook) {
+      opt.attr("selected", "true");
+    }
+    obj.append(opt);
   }
-  return result;
 }
 
-function buildOperatorList(default_operator){
-  return '<option value="&gt;="' +  (default_operator == ">=" ? "selected=true" : "") + '>&gt;=</option>'
-       + '<option value="&gt;"' +  (default_operator == ">" ? "selected=true" : "" )+ '>&gt;</option>'
-       + '<option value="="' + (default_operator == "=" ? "selected=true" : "") +'>=</option>'
-       + '<option value="&lt;"' + (default_operator == "<" ? "selected=true" : "") + '>&lt;</option>'
-       + '<option value="&lt;="' + (default_operator == "<=" ? "selected=true" : "") + '>&lt;=</option>'
-       + '<option value="~&gt;"' + (default_operator == "~>" ? "selected=true" : "") + '>~&gt;</option>';
+function appendOperatorsOptions(default_operator, obj) {
+  var ops = [">=", ">", "=", "<", "<=", "~>"];
+  for (i in ops) {
+    var op = ops[i]
+    var option = $('<option/>').attr("value", op).text(op);
+    if (default_operator == op) {
+      option.attr("selected", "true");
+    }
+    obj.append(option);
+  }
 }
 
-function retrieveCbName(timestamp){
-  var select_box = document.getElementById("cookbook_name_" + timestamp);
-  return select_box.options[select_box.selectedIndex].value;
+function retrieveCbName(timestamp) {
+  var cb_name_item = $('#cookbook_name_' + timestamp)[0];
+  if (cb_name_item && cb_name_item.value) {
+    return cb_name_item.value;
+  }
+  return "";
+}
+
+function addTableRow0000() {
+  var cookbook = $("#cookbook_name_0000")[0].value;
+  var operator = $("#cookbook_operator_selector")[0].value;
+  var version = $("#cookbook_version_0000")[0].value;
+  addTableRow(cookbook, operator, version);
+}
+
+function constraint_exists(cookbook) {
+  var cookbooks = $('.hidden_cookbook_name').map(
+    function(i, x) { return x.value });
+  return $.inArray(cookbook, cookbooks) > -1;
+}
+
+function validateUniqueConstraint(cookbook) {
+  var msg_class = 'invalid_version_error';
+  var msg_id = 'duplicate_cookbook_error';
+  if (constraint_exists(cookbook)) {
+    var error_msg = $('<div/>')
+      .addClass(msg_class)
+      .attr('id', msg_id).text("constraint already exists for " + cookbook);
+    $('#cookbook_name_0000').parent().append(error_msg);
+    return false;
+  }
+  return true;
+}
+
+function clearCookbookError() {
+  $('#duplicate_cookbook_error').remove();
 }
 
 function addTableRow(default_cookbook, default_operator, default_version){
-    var cookbook_names_string = document.getElementById('cbVerPickerTable').getAttribute('data-cookbook_names');
-    var cookbook_names = cookbook_names_string.substring(2, cookbook_names_string.length-2).split('","');
-    if (cookbook_names[0] == "[]")
-      cookbook_names = [];
-    var timestamp = new Date().getTime();
-    var row = '<tr id=' + '"' + timestamp + '"><td>' + '<select size="1" name="cookbook_name_' + timestamp + '" ' + 'id="cookbook_name_' + timestamp + '" class="cookbook_version_constraints_cb_name" onchange="jQuerySuggest(' + timestamp + ')"'+'>'
-            + buildCookbookList(cookbook_names, default_cookbook) + '</select>'
-            + '</td>'
-            + '<td><select name="operator_' + timestamp + '">' + buildOperatorList(default_operator) + '</select></td>'
-            + '<td><input class="text" name="cookbook_version_' + timestamp +'" ' + 'id="cookbook_version_' + timestamp + '" ' + 'type="text" onfocus="clearVersionBox(this,' + timestamp + ')" onblur="validateVersionBoxValue(this,' + timestamp + ')" value="' + default_version + '"></td>'
-            + '<td><a href="javascript::void(0)" onclick="removeTableRow($(this).parent().parent())">Remove</a></td>'
-            + '</tr>';
-    $("#cbVerPickerTable tbody").append(row);
-    validateVersionBoxValue(document.getElementById("cookbook_version_" + timestamp));
+  if (default_cookbook == "") return;
+  if (!validateUniqueConstraint(default_cookbook)) return;
+  if ($('#invalid_version_error_0000').length > 0) {
+    return;
+  }
+  var cookbook_names_string = document.getElementById('cbVerPickerTable').getAttribute('data-cookbook_names');
+  var cookbook_names = cookbook_names_string.substring(2, cookbook_names_string.length-2).split('","');
+  if (cookbook_names[0] == "[]") {
+    cookbook_names = [];
+  }
+  var timestamp = new Date().getTime();
+  var row = $('<tr/>');
+  var td_name = $('<td/>').text(default_cookbook)
+  var name_hidden = $('<input>')
+    .addClass("hidden_cookbook_name")
+    .attr("id", "cookbook_name_" + timestamp)
+    .attr("type", "hidden")
+    .attr("name", "cookbook_name_" + timestamp)
+    .attr("value", default_cookbook);
+  td_name.append(name_hidden);
+  var td_op = $('<td/>');
+  var select_op = $('<select/>').attr('name', "operator_" + timestamp);
+  appendOperatorsOptions(default_operator, select_op);
+  td_op.append(select_op);
+
+  var td_version = $('<td/>');
+  var version_box = $('<input>').addClass("text")
+    .attr("name", "cookbook_version_" + timestamp)
+    .attr("id", "cookbook_version_" + timestamp)
+    .attr("type", "text")
+    .attr("value", default_version)
+    .focus(function() { clearVersionBox(this, timestamp) })
+    .blur(function() { validateVersionBoxValue(this, timestamp) })
+  td_version.append(version_box);
+
+  var td_rm = $('<td/>');
+  var rm_link = $('<a/>').text("remove")
+    .attr("href", "javascript:void(0)")
+    .click(function() { row.remove() });
+  td_rm.append(rm_link);
+
+  row.append(td_name).append(td_op).append(td_version).append(td_rm);
+  $("#cbVerPickerTable tbody").append(row);
+  validateVersionBoxValue(document.getElementById("cookbook_version_" + timestamp));
 }
 
 function removeTableRow(row){
     row.remove();
 }
+  
