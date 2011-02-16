@@ -117,7 +117,6 @@
     }
 
     function checkCache(q) {
-      return false;
       for (var i = 0; i < cache.length; i++)
         if (cache[i]['q'] == q) {
           cache.unshift(cache.splice(i, 1)[0]);

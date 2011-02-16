@@ -224,7 +224,7 @@ class Environments < Application
   end
 
   def constraint_operators
-    %w(>= > = < <= ~>)
+    %w(~> >= > = < <=)
   end
 
 end

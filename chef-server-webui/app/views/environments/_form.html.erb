@@ -31,31 +31,46 @@
             <th class="version" id="CookbookVersionConstraints">Version</th>
             <th class="last" id="CookbookVersionConstraints">&nbsp;</th>
           </tr>
+          <tr id="cbVerAddRow">
+              <td>
+                <select size="1" name="cookbook_selector"
+                        id="cookbook_name_0000"
+                        onchange="jQuerySuggest('0000')"
+                        onfocus="clearCookbookError()">
+                  <option value=""></option>
+                  <% @cookbooks.each do |book| %>
+                  <option value="<%= book %>"><%= book %></option>
+                  <% end %>
+                </select>
+              </td>
+              <td>
+                <select size="1" name="cookbook_operator_selector"
+                        id="cookbook_operator_selector">
+                  <% constraint_operators.each do |op| %>
+                  <option value="<%= op %>"><%= op %></option>
+                  <% end %>
+                </select>
+              </td>
+              <td>
+                <input id="cookbook_version_0000"
+                       class="text" name="cookbook_version_selector" 
+                       onfocus="clearVersionBox(this, '0000')"
+                       onblur="validateVersionBoxValue(this, '0000')"
+                       value="0.0.0">
+              </td>
+              <td>
+                <a href="javascript:void(0)"
+                   onclick="addTableRow0000()">Add</a>
+              </td>
+            </tr>
         </tbody>
       </table>
-      <div id="cbVerAdd">
-        New constraint:
-        <select size="1" name="cookbook_selector"
-                id="cookbook_name_0000"
-                onchange="jQuerySuggest('0000')"
-                onfocus="clearCookbookError()">
-          <option value=""></option>
-          <% @cookbooks.each do |book| %>
-            <option value="<%= book %>"><%= book %></option>
-          <% end %>
-        </select>
-        <select size="1" name="cookbook_operator_selector"
-                id="cookbook_operator_selector">
-          <% constraint_operators.each do |op| %>
-            <option value="<%= op %>"><%= op %></option>
-          <% end %>
-        </select>
-        <input id="cookbook_version_0000"
-               class="text" name="cookbook_version_selector" 
-               onfocus="clearVersionBox(this, '0000')"
-               onblur="validateVersionBoxValue(this, '0000')"
-               value="0.0.0">
-        <a href="javascript:void(0)" onclick="addTableRow0000()">Add</a>
+      <div class="group form cbVerAdd" id="cbVerAdd">
+        <label class="label" for="">New constraint</label>
+        <table class="table" id="cbVerAddTable">
+          <tbody>
+          </tbody>
+        </table>
       </div>
     </div>
 
