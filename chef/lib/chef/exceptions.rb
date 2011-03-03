@@ -68,6 +68,8 @@ class Chef
     class MissingParentDirectory < RuntimeError; end
     class UnresolvableGitReference < RuntimeError; end
     class CookbookVersionConflict < ArgumentError ; end
-
+    class CookbookVersionUnavailable < StandardError; end
+    class InvalidCookbookVersion < ArgumentError; end
+    class InvalidVersionConstraint < ArgumentError; end
   end
 end
